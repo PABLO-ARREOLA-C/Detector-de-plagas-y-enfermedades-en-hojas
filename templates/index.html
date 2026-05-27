@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Detector de plagas y enfermedades en hojas</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            background: linear-gradient(
+                135deg,
+                #0f172a,
+                #1e293b
+            );
+
+            color: white;
+
+            min-height: 100vh;
+        }
+
+        .container {
+
+            display: flex;
+
+            min-height: 100vh;
+        }
+
+        .left,
+        .right {
+
+            flex: 1;
+
+            padding: 40px;
+        }
+
+        .left {
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+        }
+
+        .right {
+
+            background: rgba(15, 23, 42, 0.7);
+
+           -webkit-backdrop-filter: blur(10px);
+backdrop-filter: blur(10px);
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+        }
+
+        h1 {
+
+            margin-bottom: 20px;
+
+            text-align: center;
+
+            font-size: 32px;
+        }
+
+        p.subtitulo {
+
+            color: #94a3b8;
+
+            margin-bottom: 25px;
+
+            text-align: center;
+        }
+
+        input[type="file"] {
+
+            margin: 20px 0;
+
+            padding: 10px;
+
+            background: #1e293b;
+
+            color: white;
+
+            border-radius: 10px;
+
+            border: 1px solid #334155;
+
+            width: 100%;
+        }
+
+        button {
+
+            padding: 14px 25px;
+
+            border: none;
+
+            background: #22c55e;
+
+            color: white;
+
+            cursor: pointer;
+
+            border-radius: 12px;
+
+            font-size: 16px;
+
+            transition: 0.3s;
+
+            width: 100%;
+
+            font-weight: bold;
+        }
+
+        button:hover {
+
+            background: #16a34a;
+
+            transform: scale(1.02);
+        }
+
+        img {
+
+            width: 100%;
+
+            max-width: 350px;
+
+            border-radius: 15px;
+
+            margin-top: 25px;
+
+            display: none;
+
+            border: 3px solid #334155;
+
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        .resultado {
+
+            background: #0f172a;
+
+            border-radius: 20px;
+
+            padding: 30px;
+
+            line-height: 1.8;
+
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+
+            animation: fadeIn 0.5s ease;
+        }
+
+        .resultado h2 {
+
+            color: #22c55e;
+
+            margin-bottom: 20px;
+        }
+
+        .resultado p {
+
+            margin-bottom: 15px;
+        }
+
+        .error {
+
+            color: #ef4444;
+
+            font-weight: bold;
+        }
+
+        .loader {
+
+            border: 5px solid #334155;
+
+            border-top: 5px solid #22c55e;
+
+            border-radius: 50%;
+
+            width: 50px;
+
+            height: 50px;
+
+            animation: spin 1s linear infinite;
+
+            margin: auto;
+        }
+
+        .confidence-container {
+
+            width: 100%;
+
+            background: #1e293b;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            margin-top: 10px;
+        }
+
+        .confidence-bar {
+
+            height: 25px;
+
+            background: linear-gradient(
+                90deg,
+                #22c55e,
+                #4ade80
+            );
+
+            text-align: center;
+
+            line-height: 25px;
+
+            font-weight: bold;
+        }
+
+        .risk-alto {
+            color: #ef4444;
+        }
+
+        .risk-medio {
+            color: #facc15;
+        }
+
+        .risk-bajo,
+        .risk-sin {
+            color: #22c55e;
+        }
+
+        @keyframes spin {
+
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            .container {
+
+                flex-direction: column;
+            }
+
+            .left,
+            .right {
+
+                padding: 20px;
+            }
+
+            h1 {
+
+                font-size: 26px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- IZQUIERDA -->
+
+    <div class="left">
+
+        <h1>🌱 Detector de plagas y enfermedades en hojas</h1>
+
+        <p class="subtitulo">
+            Sistema inteligente para detección automática
+            de enfermedades en hojas de plantas
+        </p>
+
+        <label for="fileInput">
+    📷 Selecciona una imagen de la hoja
+</label>
+
+<input
+    type="file"
+    id="fileInput"
+    accept="image/*"
+    title="Seleccionar imagen de hoja"
+>
+
+        <button onclick="enviar()">
+            🔍 Analizar Hoja
+        </button>
+
+        <img
+            id="preview"
+            src=""
+            alt="Vista previa"
+        >
+
+    </div>
+
+    <!-- DERECHA -->
+
+    <div class="right">
+
+        <div
+            id="resultado"
+            class="resultado"
+        >
+
+            <h2>🤖 Esperando análisis</h2>
+
+            <p>
+                Selecciona una imagen para comenzar.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function obtenerClaseRiesgo(nivel) {
+
+    nivel = nivel.toLowerCase();
+
+    if (nivel.includes("alto")) {
+        return "risk-alto";
+    }
+
+    if (nivel.includes("medio")) {
+        return "risk-medio";
+    }
+
+    if (
+        nivel.includes("bajo") ||
+        nivel.includes("sin")
+    ) {
+        return "risk-bajo";
+    }
+
+    return "";
+}
+
+function enviar() {
+
+    const fileInput =
+        document.getElementById("fileInput");
+
+    const resultado =
+        document.getElementById("resultado");
+
+    const preview =
+        document.getElementById("preview");
+
+    // VALIDAR
+
+    if (!fileInput.files.length) {
+
+        resultado.innerHTML = `
+            <p class="error">
+                ⚠️ Selecciona una imagen
+            </p>
+        `;
+
+        return;
+    }
+
+    const file = fileInput.files[0];
+
+    // PREVIEW
+
+    preview.src =
+        URL.createObjectURL(file);
+
+    preview.style.display = "block";
+
+    // LOADING
+
+    resultado.innerHTML = `
+
+        <div class="loader"></div>
+
+        <p style="text-align:center; margin-top:20px;">
+            Analizando imagen con IA...
+        </p>
+
+    `;
+
+    // FORM DATA
+
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    // FETCH
+
+    fetch("/predict", {
+
+        method: "POST",
+
+        body: formData
+
+    })
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        // ERROR
+
+        if (data.error) {
+
+            resultado.innerHTML = `
+
+                <p class="error">
+                    ${data.error}
+                </p>
+
+            `;
+
+            return;
+        }
+
+        const riesgoClase =
+            obtenerClaseRiesgo(data.nivel);
+
+        // RESULTADO
+
+        resultado.innerHTML = `
+
+            <h2>
+                🌿 Resultado del análisis
+            </h2>
+
+            <hr style="
+                border:1px solid #334155;
+                margin-bottom:20px;
+            ">
+
+            <p>
+                <b>🌱 Planta:</b><br>
+                ${data.planta}
+            </p>
+
+            <p>
+                <b>🦠 Diagnóstico:</b><br>
+                ${data.diagnostico}
+            </p>
+
+            <p>
+                <b>⚠️ Nivel de riesgo:</b><br>
+
+                <span class="${riesgoClase}">
+                    ${data.nivel}
+                </span>
+            </p>
+
+            <p>
+                <b>📖 Descripción:</b><br>
+                ${data.descripcion}
+            </p>
+
+            <p>
+                <b>💊 Tratamiento:</b><br>
+                ${data.tratamiento}
+            </p>
+
+            <p>
+                <b>🛡️ Prevención:</b><br>
+                ${data.prevencion}
+            </p>
+
+            <p>
+                <b>🤖 Confianza IA:</b>
+            </p>
+
+            <div class="confidence-container">
+
+                <div
+                    class="confidence-bar"
+                    style="width:${data.confianza}%"
+                >
+
+                    ${data.confianza}%
+
+                </div>
+
+            </div>
+
+        `;
+    })
+
+    .catch(error => {
+
+        resultado.innerHTML = `
+
+            <p class="error">
+                ❌ Error al procesar la imagen
+            </p>
+
+        `;
+
+        console.error(error);
+    });
+}
+
+</script>
+
+</body>
+
+</html>
